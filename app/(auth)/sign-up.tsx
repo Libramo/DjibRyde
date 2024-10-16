@@ -10,7 +10,8 @@ import CustomButton from "@/components/CustomButton";
 import { icons, images } from "@/constants";
 import InputField from "@/components/InputField";
 import { useSignUp } from "@clerk/clerk-expo";
-// import { fetchAPI } from "@/lib/fetch";
+import OAuth from "@/components/OAuth";
+import { fetchAPI } from "@/lib/fetch";
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -21,6 +22,7 @@ const SignUp = () => {
     email: "",
     password: "",
   });
+
   const [verification, setVerification] = useState({
     state: "default",
     error: "",
@@ -42,7 +44,7 @@ const SignUp = () => {
     } catch (err: any) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.log(JSON.stringify(err, null, 2));
+      // console.log(JSON.stringify(err, null, 3));
       Alert.alert("Error", err.errors[0].longMessage);
     }
   };
@@ -54,14 +56,14 @@ const SignUp = () => {
         code: verification.code,
       });
       if (completeSignUp.status === "complete") {
-        // await fetchAPI("/(api)/user", {
-        //   method: "POST",
-        //   body: JSON.stringify({
-        //     name: form.name,
-        //     email: form.email,
-        //     clerkId: completeSignUp.createdUserId,
-        //   }),
-        // });
+        await fetchAPI("/(api)/user", {
+          method: "POST",
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            clerkId: completeSignUp.createdUserId,
+          }),
+        });
         await setActive({ session: completeSignUp.createdSessionId });
         setVerification({
           ...verification,
@@ -121,10 +123,10 @@ const SignUp = () => {
           />
           <CustomButton
             title="Sign Up"
-            // onPress={onSignUpPress}
+            onPress={onSignUpPress}
             className="mt-6"
           />
-          {/* <OAuth /> */}
+          <OAuth />
           <Link
             href="/sign-in"
             className="text-lg text-center text-general-200 mt-10"
@@ -133,6 +135,7 @@ const SignUp = () => {
             <Text className="text-primary-500">Log In</Text>
           </Link>
         </View>
+
         <ReactNativeModal
           isVisible={verification.state === "pending"}
           // onBackdropPress={() =>
@@ -176,7 +179,7 @@ const SignUp = () => {
 
         {/* NATIVE MODAL 2 */}
 
-        <ReactNativeModal isVisible={verification.state === "success"}>
+        <ReactNativeModal isVisible={showSuccessModal}>
           <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
             <Image
               source={images.check}
@@ -190,7 +193,10 @@ const SignUp = () => {
             </Text>
             <CustomButton
               title="Browse Home"
-              onPress={() => router.push(`/(root)/(tabs)/home`)}
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.push(`/(root)/(tabs)/home`);
+              }}
               className="mt-5"
             />
           </View>
